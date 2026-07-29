@@ -1,6 +1,5 @@
-// This is the Prisma schema file.
-// Schema (Player, Session, Step enum) will be added in the next prompt.
-// See README.md §4 for the full schema design.
+// Prisma schema for VES Campus Clash
+// Implements the full data model from README.md §3 and §4.
 
 generator client {
   provider = "prisma-client-js"
@@ -11,7 +10,61 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Models to be added:
-// model Player { ... }
-// model Session { ... }
-// enum Step { FOLLOWED REGISTERED PLAYING COMPLETED }
+// ─────────────────────────────────────────────────────────
+// Player — one row per unique participant
+// ─────────────────────────────────────────────────────────
+model Player {
+  id        String   @id @default(cuid())
+  name      String
+  institute String
+  course    String
+  year      String
+  igHandle  String
+  createdAt DateTime @default(now())
+
+  sessions Session[]
+}
+
+// ─────────────────────────────────────────────────────────
+// Session — one row per game attempt (enforces one-shot)
+//
+// State machine: FOLLOWED → REGISTERED → PLAYING → COMPLETED
+//
+// Game fields (§3):
+//   currentQuestion   — 0-indexed pointer; incremented after each answer
+//   puzzleSeed        — set once at PLAYING; `${token}-${randomSalt}`
+//                       used server-side to deterministically regenerate
+//                       each question without storing all 10 rows
+//   questionStartedAt — stamped by the server when it issues a question;
+//                       used to enforce the 10-second window server-side
+// ─────────────────────────────────────────────────────────
+model Session {
+  id    String @id @default(cuid())
+  token String @unique
+  step  Step   @default(FOLLOWED)
+
+  // Linked player (null until registration completes)
+  playerId String?
+  player   Player? @relation(fields: [playerId], references: [id])
+
+  // Result
+  score       Int?
+  startedAt   DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  // ── Game fields (§3) ───────────────────────────────────
+  currentQuestion   Int       @default(0)
+  puzzleSeed        String?
+  questionStartedAt DateTime?
+}
+
+// ─────────────────────────────────────────────────────────
+// Step enum — mirrors the server-side state machine
+// ─────────────────────────────────────────────────────────
+enum Step {
+  FOLLOWED
+  REGISTERED
+  PLAYING
+  COMPLETED
+}
