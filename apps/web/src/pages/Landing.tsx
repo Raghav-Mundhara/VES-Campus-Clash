@@ -20,10 +20,10 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full text-center space-y-8">
         <div className="space-y-4">
-          <h1 className="text-5xl font-black tracking-tight bg-gradient-to-br from-indigo-400 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-black tracking-tight bg-gradient-to-br from-yellow-400 to-red-600 bg-clip-text text-transparent">
             VES Campus Clash
           </h1>
           <p className="text-zinc-400 text-lg">
@@ -31,7 +31,7 @@ export default function Landing() {
           </p>
         </div>
 
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 space-y-6">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 space-y-6 shadow-xl shadow-red-900/10">
           <p className="text-zinc-300">
             To enter the clash, you must follow our official Instagram page.
           </p>
@@ -39,7 +39,7 @@ export default function Landing() {
           <button
             onClick={handleFollowClick}
             disabled={loading}
-            className="w-full py-4 rounded-xl font-bold text-lg bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="w-full py-4 rounded-xl font-bold text-lg bg-red-600 text-white hover:bg-red-500 active:bg-red-700 disabled:opacity-50 transition-colors shadow-lg shadow-red-600/20"
           >
             {loading ? 'Entering...' : "I've Followed"}
           </button>

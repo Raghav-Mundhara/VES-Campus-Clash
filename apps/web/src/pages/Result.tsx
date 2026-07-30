@@ -33,8 +33,6 @@ export default function Result() {
     if (!cardRef.current || !status) return
     setIsDownloading(true)
     try {
-      // Temporarily remove opacity if html2canvas skips it, though html2canvas ignores opacity: 0 on parents sometimes.
-      // Better to keep it out of viewport rather than display:none or opacity:0.
       const originalPosition = cardRef.current.style.position
       
       const canvas = await html2canvas(cardRef.current, {
@@ -71,13 +69,6 @@ export default function Result() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-6 overflow-hidden">
-      
-      {/* 
-        I chose the client-side html2canvas approach (Module 05) because it is significantly faster 
-        to implement in a React SPA compared to a server-side node-canvas rendering pipeline. 
-        It avoids needing a separate card generation endpoint, native C++ dependencies on the 
-        server, and handles template styling purely via existing React/Tailwind.
-      */}
 
       {/* Main UI */}
       <div className="max-w-md w-full space-y-8 bg-zinc-900 p-8 rounded-2xl shadow-xl border border-zinc-800 text-center relative z-10">
