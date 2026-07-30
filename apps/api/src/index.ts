@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 
 import { sessionRouter } from './routes/session'
-
+import { gameRouter } from './routes/game'
 const app = express()
 const PORT = process.env.PORT ?? 3001
 
@@ -18,7 +18,7 @@ app.get('/health', (_req, res) => {
 // Feature routers
 app.use('/api/session', sessionRouter)
 // app.use('/api/register', registerRouter)   // Day 2
-// app.use('/api/game',     gameRouter)        // Day 3
+app.use('/api/game',     gameRouter)        // Day 3
 // app.use('/api/result',   resultRouter)      // Day 4
 // app.use('/api/card',     cardRouter)        // Day 4
 
