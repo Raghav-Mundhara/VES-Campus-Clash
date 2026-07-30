@@ -58,3 +58,45 @@ export async function getSessionStatus(token: string): Promise<SessionStatus> {
   
   return res.json()
 }
+
+export interface GameStartResponse {
+  success: boolean
+  step: Step
+  question: string
+  questionIndex: number
+}
+
+export async function postGameStart(token: string): Promise<GameStartResponse> {
+  const res = await fetch('/api/game/start', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  if (!res.ok) throw new Error('Failed to start game')
+  return res.json()
+}
+
+export interface GameAnswerResponse {
+  success: boolean
+  step: Step
+  earned: number
+  totalScore: number
+  question?: string
+  questionIndex?: number
+  gameOver: boolean
+}
+
+export async function postGameAnswer(token: string, answer: number, questionIndex: number): Promise<GameAnswerResponse> {
+  const res = await fetch('/api/game/answer', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ answer, questionIndex })
+  })
+  if (!res.ok) throw new Error('Failed to submit answer')
+  return res.json()
+}
