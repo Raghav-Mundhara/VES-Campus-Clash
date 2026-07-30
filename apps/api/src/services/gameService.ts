@@ -72,7 +72,7 @@ export function generateQuestion(seed: string, index: number): QuestionDef {
 }
 
 export function calculateScore(index: number, elapsedMs: number): number {
-  if (elapsedMs > 10500) return 0; // 10s + 500ms grace window for network latency
+  if (elapsedMs > 12000) return 0; // 10s + 2s grace window for network latency
   
   // "remaining_seconds" is floored or rounded? Let's assume math.ceil or floor.
   // 9.5s elapsed -> 0.5s remaining -> remaining_seconds = 0

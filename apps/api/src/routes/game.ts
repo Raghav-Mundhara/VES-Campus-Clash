@@ -9,6 +9,18 @@ export const gameRouter = Router()
 gameRouter.post('/start', sessionAuth, async (req: Request, res: Response) => {
   const session = req.session!
 
+  if (session.step === 'PLAYING') {
+    const q = generateQuestion(session.puzzleSeed!, session.currentQuestion)
+    res.status(200).json({
+      success: true,
+      step: 'PLAYING',
+      question: q.display,
+      questionIndex: session.currentQuestion,
+      startedAt: session.questionStartedAt
+    })
+    return
+  }
+
   if (session.step !== 'REGISTERED') {
     res.status(403).json({ error: 'Session is not in REGISTERED state' })
     return
@@ -35,7 +47,8 @@ gameRouter.post('/start', sessionAuth, async (req: Request, res: Response) => {
       success: true,
       step: 'PLAYING',
       question: q.display,
-      questionIndex: 0
+      questionIndex: 0,
+      startedAt: questionStartedAt
     })
   } catch (err) {
     console.error('[POST /game/start]', err)
@@ -51,9 +64,14 @@ gameRouter.post('/answer', sessionAuth, async (req: Request, res: Response) => {
     return
   }
 
-  const { answer } = req.body
-  if (answer === undefined) {
-    res.status(400).json({ error: 'Answer is required' })
+  const { answer, questionIndex } = req.body
+  if (answer === undefined || questionIndex === undefined) {
+    res.status(400).json({ error: 'Answer and questionIndex are required' })
+    return
+  }
+
+  if (questionIndex !== session.currentQuestion) {
+    res.status(409).json({ error: 'Question index mismatch (already answered)' })
     return
   }
 
