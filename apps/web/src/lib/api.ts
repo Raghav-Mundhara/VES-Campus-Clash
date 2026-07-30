@@ -25,6 +25,24 @@ export async function postFollow(): Promise<{ token: string; step: Step }> {
   return res.json()
 }
 
+export async function postRegister(token: string, data: any): Promise<{ success: boolean; step: Step }> {
+  const res = await fetch('/api/session/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => null)
+    throw new Error(errorData?.error || 'Registration failed')
+  }
+
+  return res.json()
+}
+
 export async function getSessionStatus(token: string): Promise<SessionStatus> {
   const res = await fetch(`/api/session/${token}/status`, {
     method: 'GET',

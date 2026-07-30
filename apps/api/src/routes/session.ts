@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express'
 import { randomBytes } from 'crypto'
 import { prisma } from '../lib/prisma'
 import { sessionAuth } from '../middleware/sessionAuth'
+import { registerSchema } from '../lib/schemas'
 
 export const sessionRouter = Router()
 
@@ -17,6 +18,51 @@ sessionRouter.post('/follow', async (_req: Request, res: Response) => {
   } catch (err) {
     console.error('[POST /session/follow]', err)
     res.status(500).json({ error: 'Failed to create session' })
+  }
+})
+
+sessionRouter.post('/register', sessionAuth, async (req: Request, res: Response) => {
+  const session = req.session!
+
+  if (session.step !== 'FOLLOWED') {
+    res.status(403).json({ error: 'Session is not in FOLLOWED state' })
+    return
+  }
+
+  try {
+    const validatedData = registerSchema.parse(req.body)
+
+    let player = await prisma.player.findFirst({
+      where: { igHandle: validatedData.igHandle }
+    })
+
+    if (player) {
+      player = await prisma.player.update({
+        where: { id: player.id },
+        data: validatedData,
+      })
+    } else {
+      player = await prisma.player.create({
+        data: validatedData,
+      })
+    }
+
+    await prisma.session.update({
+      where: { id: session.id },
+      data: {
+        step: 'REGISTERED',
+        playerId: player.id,
+      },
+    })
+
+    res.status(200).json({ success: true, step: 'REGISTERED' })
+  } catch (err: any) {
+    if (err.name === 'ZodError') {
+      res.status(400).json({ error: 'Validation failed', details: err.errors })
+      return
+    }
+    console.error('[POST /session/register]', err)
+    res.status(500).json({ error: 'Internal server error' })
   }
 })
 
