@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getSessionStatus, SessionStatus } from '../lib/api'
 import html2canvas from 'html2canvas'

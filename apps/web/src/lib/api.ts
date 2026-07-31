@@ -12,8 +12,10 @@ export interface SessionStatus {
   completedAt: string | null
 }
 
+const API_BASE = import.meta.env.VITE_API_URL;
+
 export async function postFollow(): Promise<{ token: string; step: Step }> {
-  const res = await fetch('/api/session/follow', {
+  const res = await fetch(`${API_BASE}/api/session/follow`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   })
@@ -26,7 +28,7 @@ export async function postFollow(): Promise<{ token: string; step: Step }> {
 }
 
 export async function postRegister(token: string, data: any): Promise<{ success: boolean; step: Step }> {
-  const res = await fetch('/api/session/register', {
+  const res = await fetch(`${API_BASE}/api/session/register`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -44,7 +46,7 @@ export async function postRegister(token: string, data: any): Promise<{ success:
 }
 
 export async function getSessionStatus(token: string): Promise<SessionStatus> {
-  const res = await fetch(`/api/session/${token}/status`, {
+  const res = await fetch(`${API_BASE}/api/session/${token}/status`, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   })
@@ -67,7 +69,7 @@ export interface GameStartResponse {
 }
 
 export async function postGameStart(token: string): Promise<GameStartResponse> {
-  const res = await fetch('/api/game/start', {
+  const res = await fetch(`${API_BASE}/api/game/start`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -89,7 +91,7 @@ export interface GameAnswerResponse {
 }
 
 export async function postGameAnswer(token: string, answer: number, questionIndex: number): Promise<GameAnswerResponse> {
-  const res = await fetch('/api/game/answer', {
+  const res = await fetch(`${API_BASE}/api/game/answer`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
