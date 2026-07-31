@@ -4,21 +4,31 @@ import { postGameStart, postGameAnswer, getSessionStatus } from '../lib/api'
 
 export default function Game() {
   const navigate = useNavigate()
-  
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [question, setQuestion] = useState<string>('')
   const [questionIndex, setQuestionIndex] = useState<number>(0)
-  
+  const questionIndexRef = useRef<number>(0) // always holds the latest questionIndex, avoids stale closures in timers
+
   const [answerInput, setAnswerInput] = useState<string>('')
   const [timeLeft, setTimeLeft] = useState<number>(10)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   const [feedback, setFeedback] = useState<'correct' | 'incorrect' | null>(null)
-  
+
+  const [totalScore, setTotalScore] = useState<number>(0)
+  const [lastEarned, setLastEarned] = useState<number | null>(null)
+
   const timerRef = useRef<number | null>(null)
   const startTimeRef = useRef<number>(0)
+
+  // keeps state + ref in sync so both React renders and timer callbacks see the current value
+  const updateQuestionIndex = (idx: number) => {
+    questionIndexRef.current = idx
+    setQuestionIndex(idx)
+  }
 
   useEffect(() => {
     async function initGame() {
@@ -28,10 +38,11 @@ export default function Game() {
       try {
         const status = await getSessionStatus(token)
         if (status.step === 'PLAYING' || status.step === 'REGISTERED') {
+          setTotalScore((status as any).score ?? 0)
           const res = await postGameStart(token)
           setQuestion(res.question)
-          setQuestionIndex(res.questionIndex)
-          
+          updateQuestionIndex(res.questionIndex)
+
           if ((res as any).startedAt) {
             const serverStart = new Date((res as any).startedAt).getTime()
             startTimeRef.current = serverStart
@@ -47,7 +58,7 @@ export default function Game() {
       }
     }
     initGame()
-    
+
     return () => stopTimer()
   }, [navigate])
 
@@ -57,17 +68,17 @@ export default function Game() {
     }
     const initialElapsed = (Date.now() - startTimeRef.current) / 1000
     setTimeLeft(Math.max(0, 10 - initialElapsed))
-    
+
     if (timerRef.current) clearInterval(timerRef.current)
-    
+
     timerRef.current = window.setInterval(() => {
       const elapsed = (Date.now() - startTimeRef.current) / 1000
       const remaining = Math.max(0, 10 - elapsed)
       setTimeLeft(remaining)
-      
+
       if (remaining === 0) {
         stopTimer()
-        handleSubmit(null) // timeout
+        handleSubmit(null) // timeout — no answer submitted
       }
     }, 100) // update every 100ms for smooth progress bar
   }
@@ -89,34 +100,46 @@ export default function Game() {
     const token = localStorage.getItem('ves_session_token')
     if (!token) return
 
-    const submittedAnswer = answerInput.trim() !== '' ? Number(answerInput) : -999999
+    const submittedAnswer = answerInput.trim() !== '' ? Number(answerInput) : -999
 
     try {
-      const res = await postGameAnswer(token, submittedAnswer, questionIndex)
-      
+      const res = await postGameAnswer(token, submittedAnswer, questionIndexRef.current)
+
       if (res.earned > 0) {
         setFeedback('correct')
       } else {
         setFeedback('incorrect')
       }
+      setLastEarned(res.earned)
+      setTotalScore(res.totalScore)
 
       setTimeout(() => {
         setFeedback(null)
         setAnswerInput('')
-        
+
         if (res.gameOver) {
           navigate('/result', { replace: true })
         } else {
           setQuestion(res.question || '')
-          setQuestionIndex(res.questionIndex || 0)
+          updateQuestionIndex(res.questionIndex || 0)
           setIsSubmitting(false)
           startTimer()
         }
       }, 1000)
-      
+
     } catch (err: any) {
-      setError(err.message || 'Failed to submit answer')
-      setIsSubmitting(false)
+      // Don't block the whole game on a failed submit — treat it as a missed
+      // answer, log it, and keep the flow moving instead of showing an error page.
+      console.error('Failed to submit answer:', err)
+      setFeedback('incorrect')
+      setLastEarned(0)
+
+      setTimeout(() => {
+        setFeedback(null)
+        setAnswerInput('')
+        setIsSubmitting(false)
+        startTimer()
+      }, 1000)
     }
   }
 
@@ -138,25 +161,38 @@ export default function Game() {
   return (
     <div className="min-h-screen bg-zinc-950 text-white flex flex-col items-center justify-center p-6">
       <div className="max-w-md w-full space-y-8">
-        
+
         <div className="flex justify-between items-center text-sm font-medium text-zinc-400">
           <div>Question {questionIndex + 1} / 10</div>
-          <div className="text-yellow-400 font-mono text-base">{timeLeft.toFixed(1)}s</div>
+          <div className="flex items-center gap-4">
+            <div className="text-white font-mono text-base">
+              Score: <span className="text-yellow-400 font-bold">{totalScore}</span>
+            </div>
+            <div className="text-yellow-400 font-mono text-base">{timeLeft.toFixed(1)}s</div>
+          </div>
         </div>
-        
+
         <div className="w-full bg-zinc-800 h-2 rounded-full overflow-hidden">
-          <div 
+          <div
             className={`h-full transition-all duration-100 ease-linear ${timeLeft > 3 ? 'bg-yellow-400' : 'bg-red-500'}`}
             style={{ width: `${(timeLeft / 10) * 100}%` }}
           />
         </div>
 
         <div className={`
-          bg-zinc-900 border-2 rounded-2xl p-8 shadow-2xl transition-colors duration-300
+          bg-zinc-900 border-2 rounded-2xl p-8 shadow-2xl transition-colors duration-300 relative
           ${feedback === 'correct' ? 'border-green-500 bg-green-500/10' : ''}
           ${feedback === 'incorrect' ? 'border-red-500 bg-red-500/10' : ''}
           ${feedback === null ? 'border-zinc-800' : ''}
         `}>
+          {feedback && lastEarned !== null && (
+            <div className={`absolute -top-4 right-4 px-3 py-1 rounded-full text-sm font-bold ${
+              feedback === 'correct' ? 'bg-green-500 text-black' : 'bg-red-500 text-white'
+            }`}>
+              {feedback === 'correct' ? `+${lastEarned}` : '+0'}
+            </div>
+          )}
+
           <div className="text-5xl font-black text-center mb-8 tracking-wider font-mono">
             {question}
           </div>
@@ -171,7 +207,7 @@ export default function Game() {
               className="w-full text-center text-3xl font-bold px-4 py-4 bg-zinc-950 border-2 border-zinc-700 rounded-xl focus:outline-none focus:border-yellow-400 transition-colors"
               placeholder="?"
             />
-            
+
             <button
               type="submit"
               disabled={isSubmitting || feedback !== null || answerInput === ''}
@@ -185,7 +221,7 @@ export default function Game() {
             </button>
           </form>
         </div>
-        
+
       </div>
     </div>
   )

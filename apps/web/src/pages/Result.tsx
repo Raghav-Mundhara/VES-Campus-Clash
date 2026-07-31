@@ -33,10 +33,11 @@ export default function Result() {
     if (!cardRef.current || !status) return
     setIsDownloading(true)
     try {
-      const originalPosition = cardRef.current.style.position
-      
+      await document.fonts.ready
+      await new Promise(resolve => setTimeout(resolve, 100))
+
       const canvas = await html2canvas(cardRef.current, {
-        scale: 1, // 1080x1920 is sufficient
+        scale: 1,
         useCORS: true,
         backgroundColor: '#09090b',
         logging: false
@@ -102,15 +103,12 @@ export default function Result() {
         </div>
       </div>
 
-      {/* Hidden Story Card Template - rendered off-screen */}
-      {/* Using position absolute with large negative offsets to hide it without display:none */}
       <div className="absolute top-[9999px] left-[9999px]" style={{ zIndex: -9999 }}>
         <div 
           ref={cardRef} 
           className="w-[1080px] h-[1920px] flex flex-col items-center justify-center relative overflow-hidden"
           style={{ fontFamily: 'sans-serif', backgroundColor: '#09090b' }}
         >
-          {/* Background decorations - using solid hex colors for html2canvas compatibility */}
           <div className="absolute top-0 left-0 w-full h-[600px]" style={{ background: 'linear-gradient(to bottom, rgba(239,68,68,0.2), transparent)' }} />
           <div className="absolute bottom-0 right-0 w-[800px] h-[800px] rounded-full" style={{ backgroundColor: 'rgba(250,204,21,0.1)', filter: 'blur(100px)' }} />
           <div className="absolute top-0 left-0 w-[600px] h-[600px] rounded-full" style={{ backgroundColor: 'rgba(239,68,68,0.1)', filter: 'blur(100px)' }} />
@@ -121,8 +119,18 @@ export default function Result() {
             </h1>
             
             <div className="border-4 p-16 rounded-[3rem] text-center w-[800px]" style={{ backgroundColor: '#18181b', borderColor: '#eab308' }}>
-              <p className="text-4xl font-bold tracking-widest uppercase mb-4" style={{ color: '#d4d4d8' }}>I Scored</p>
-              <div className="text-[12rem] leading-none font-black font-mono" style={{ color: '#ffffff' }}>
+              <p className="text-4xl font-bold tracking-widest uppercase mb-2" style={{ color: '#d4d4d8' }}>I Scored</p>
+              <div
+                style={{
+                  color: '#ffffff',
+                  fontSize: '12rem',
+                  lineHeight: 1.05,
+                  fontWeight: 900,
+                  fontFamily: "'Courier New', monospace",
+                  marginTop: '-0.4em',       
+                  paddingBottom: '0.05em',   
+                }}
+              >
                 {status.score ?? 0}
               </div>
             </div>
