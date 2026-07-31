@@ -103,7 +103,7 @@ export default function Result() {
         </div>
       </div>
 
-      <div className="absolute top-[9999px] left-[9999px]" style={{ zIndex: -9999 }}>
+      <div className="fixed -top-[9999px] -left-[9999px]" style={{ zIndex: -9999 }}>
         <div 
           ref={cardRef} 
           className="w-[1080px] h-[1920px] flex flex-col items-center justify-center relative overflow-hidden"

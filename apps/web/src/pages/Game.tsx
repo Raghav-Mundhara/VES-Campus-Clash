@@ -144,7 +144,11 @@ export default function Game() {
   }
 
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white animate-pulse">Loading Game...</div>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <div className="animate-pulse text-yellow-400 font-bold text-xl tracking-widest uppercase">Loading Clash...</div>
+      </div>
+    )
   }
 
   if (error) {
