@@ -1,7 +1,7 @@
 # VES Campus Clash
 
-**Github URL:** [Insert Github URL here]  
-**Project URL:** [Insert Project URL here]  
+**Github URL:** https://github.com/Raghav-Mundhara/VES-Campus-Clash
+**Project URL:** d1ay330t1dxjec.cloudfront.net  
 
 A campaign micro-app built for VES campuses: a QR-triggered game funnel ending in an Instagram Story Card. 
 
